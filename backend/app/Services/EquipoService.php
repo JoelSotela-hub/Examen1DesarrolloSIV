@@ -30,26 +30,56 @@ class EquipoService
      */
     public function listar(?string $q, ?string $estado, int $porPagina): LengthAwarePaginator
     {
-        // TODO
+        return Equipo::query()
+            ->with('categoria')
+            ->when($q, function ($query, $q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('codigo', 'like', "%{$q}%")
+                        ->orWhere('nombre', 'like', "%{$q}%");
+                });
+            })
+            ->when($estado, fn ($query, $estado) => $query->where('estado', $estado))
+            ->orderBy('codigo')
+            ->paginate($porPagina);
     }
 
     public function crear(array $datos): Equipo
     {
-        // TODO: devuelva el equipo con la categoría cargada
+        $equipo = Equipo::create($datos);
+
+        return $equipo->load('categoria');
     }
 
     public function actualizar(Equipo $equipo, array $datos): Equipo
     {
-        // TODO: devuelva el equipo actualizado con la categoría cargada
+        $equipo->update($datos);
+
+        return $equipo->load('categoria');
     }
 
     public function eliminar(Equipo $equipo): void
     {
-        // TODO: aplique R1
+        // R1: no se puede eliminar un equipo que está prestado
+        if ($equipo->estado === 'prestado') {
+            throw new ReglaNegocioException(
+                'No se puede eliminar un equipo que está prestado.'
+            );
+        }
+
+        $equipo->delete();
     }
 
     public function prestar(Equipo $equipo): Equipo
     {
-        // TODO: aplique R2 y cambie el estado a "prestado"
+         // R2: solo se puede prestar un equipo disponible
+        if ($equipo->estado !== 'disponible') {
+            throw new ReglaNegocioException(
+                'Solo se pueden prestar equipos en estado disponible.'
+            );
+        }
+
+        $equipo->update(['estado' => 'prestado']);
+
+        return $equipo->load('categoria');
     }
 }
