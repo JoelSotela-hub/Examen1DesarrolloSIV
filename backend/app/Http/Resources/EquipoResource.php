@@ -26,7 +26,16 @@ class EquipoResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // TODO
-        return parent::toArray($request);
+        return [
+            'id'                => $this->id,
+            'codigo'            => $this->codigo,
+            'nombre'            => $this->nombre,
+            'categoria_id'      => $this->categoria_id,
+            'categoria'         => new CategoriaResource($this->whenLoaded('categoria')),
+            'estado'            => $this->estado,
+            'fecha_adquisicion' => $this->fecha_adquisicion,
+        ];
+        return parent::toArray($request);   
+        
     }
 }
