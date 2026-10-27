@@ -30,12 +30,9 @@ class EquipoResource extends JsonResource
             'id'                => $this->id,
             'codigo'            => $this->codigo,
             'nombre'            => $this->nombre,
-            'categoria_id'      => $this->categoria_id,
-            'categoria'         => new CategoriaResource($this->whenLoaded('categoria')),
             'estado'            => $this->estado,
-            'fecha_adquisicion' => $this->fecha_adquisicion,
+            'fecha_adquisicion' => $this->fecha_adquisicion?->toDateString(),
+            'categoria'         => new CategoriaResource($this->whenLoaded('categoria')),
         ];
-        return parent::toArray($request);   
-        
     }
 }
