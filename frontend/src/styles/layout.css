@@ -20,23 +20,72 @@
    5. Ningún elemento debe provocar desplazamiento horizontal a 360px de ancho.
    ========================================================================= */
 
+/* Evitar desbordamiento horizontal en cualquier tamaño */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .layout {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 1rem;
+  /* Mobile: una sola columna */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  /* Prevenir scroll horizontal */
+  overflow-x: hidden;
 }
 
 .panel-form {
+  width: 100%;
 }
 
 .panel-listado {
+  min-width: 0; /* Evita desbordamiento en grid */
 }
 
 .barra-listado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .lista-equipos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
 }
 
 .paginacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  gap: 0.5rem;
 }
 
 @media (min-width: 900px) {
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    /* Prevenir scroll horizontal */
+    overflow-x: hidden;
+  }
+
+  .panel-form {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+  }
 }
+

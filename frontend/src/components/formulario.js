@@ -7,23 +7,61 @@ const $btnGuardar = document.querySelector("#btn-guardar");
 
 /**
  * TODO [F3] Formulario de registro de equipos.
- *
- * iniciarFormulario({ alGuardar }):
- *  1. Llene el <select id="categoria_id"> con listarCategorias()
- *     (cree cada <option> con createElement, value = id, texto = nombre).
- *  2. Al enviar el formulario (submit):
- *     - Evite el envío tradicional.
- *     - Limpie los errores anteriores: textContent de [data-error] y aria-invalid de los campos.
- *     - Construya el objeto con FormData. categoria_id y costo_interno deben ir como números.
- *     - Deshabilite #btn-guardar y cambie su texto a "Guardando…" mientras espera.
- *     - Llame a crearEquipo(datos).
- *     - Éxito: limpie el formulario, mostrarMensaje("exito", "Equipo <codigo> registrado.")
- *              y llame a alGuardar().
- *     - 422: por cada campo de error.datos.errors, escriba el PRIMER mensaje en
- *            el <p data-error="<campo>"> y marque el campo con aria-invalid="true".
- *     - Otro error: mostrarMensaje("error", ...).
- *     - Siempre (finally): rehabilite el botón y restaure su texto.
  */
 export const iniciarFormulario = ({ alGuardar }) => {
-  // TODO
+  // 1. Cargar categorías en el <select>
+  listarCategorias()
+    .then(({ data: categorias }) => {
+      categorias.forEach((cat) => {
+        const $option = document.createElement("option");
+        $option.value = cat.id;
+        $option.textContent = cat.nombre;
+        $selectCategoria.appendChild($option);
+      });
+    })
+    .catch(() => {
+      mostrarMensaje("error", "No se pudieron cargar las categorías.");
+    });
+
+  // 2. Manejar el envío del formulario
+  $form.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    // Limpiar errores previos
+    $form.querySelectorAll("[data-error]").forEach(($p) => ($p.textContent = ""));
+    $form.querySelectorAll("[aria-invalid]").forEach(($campo) => $campo.removeAttribute("aria-invalid"));
+
+    // Construir datos desde FormData, convirtiendo campos numéricos
+    const formData = new FormData($form);
+    const datos = Object.fromEntries(formData.entries());
+    datos.categoria_id = Number(datos.categoria_id);
+    datos.costo_interno = Number(datos.costo_interno);
+
+    // Deshabilitar botón mientras guarda
+    $btnGuardar.disabled = true;
+    const textoOriginal = $btnGuardar.textContent;
+    $btnGuardar.textContent = "Guardando…";
+
+    try {
+      const equipo = await crearEquipo(datos);
+      mostrarMensaje("exito", `Equipo ${equipo.codigo ?? datos.codigo} registrado.`);
+      $form.reset();
+      alGuardar();
+    } catch (error) {
+      if (error.status === 422) {
+        for (const [campo, mensajes] of Object.entries(error.datos?.errors ?? {})) {
+          const $errorP = $form.querySelector(`[data-error="${campo}"]`);
+          if ($errorP) $errorP.textContent = mensajes[0];
+          const $campo = $form.querySelector(`[name="${campo}"]`);
+          if ($campo) $campo.setAttribute("aria-invalid", "true");
+        }
+      } else {
+        mostrarMensaje("error", error.message ?? "Error al guardar el equipo.");
+      }
+    } finally {
+      $btnGuardar.disabled = false;
+      $btnGuardar.textContent = textoOriginal;
+    }
+  });
 };
+
